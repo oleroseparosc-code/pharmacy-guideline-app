@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const matchCount = document.getElementById('matchCount');
     const prevMatchBtn = document.getElementById('prevMatchBtn');
     const nextMatchBtn = document.getElementById('nextMatchBtn');
+    const appContainer = document.getElementById('appContainer');
+    const backBtn = document.getElementById('backBtn');
 
     // State
     let currentFilter = '전체'; // 전체, 규정, 지침
@@ -58,6 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentHighlightIndex = (currentHighlightIndex + 1) % highlightElements.length;
                 updateHighlightSelection();
             }
+        });
+
+        // Mobile back button
+        backBtn.addEventListener('click', () => {
+            appContainer.classList.remove('mobile-view-doc');
         });
     }
 
@@ -191,6 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide placeholder, show viewer
         contentPlaceholder.classList.add('hidden');
         markdownViewer.classList.remove('hidden');
+
+        // Toggle mobile view
+        appContainer.classList.add('mobile-view-doc');
         
         // Set metadata
         docTitle.textContent = doc.title;
