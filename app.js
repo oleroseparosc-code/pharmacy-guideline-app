@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render Markdown
         // marked.parse() is provided by the CDN script
         try {
-            let htmlContent = marked.parse(doc.content);
+            let htmlContent = marked.parse(doc.content, { breaks: true });
             
             // Highlight the search query in the main content if it exists
             if (searchQuery) {
