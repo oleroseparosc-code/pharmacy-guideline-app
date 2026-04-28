@@ -25,6 +25,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize App
     function init() {
+        // Sort documentsData: 1-x documents numerically first, then alphabetically
+        documentsData.sort((a, b) => {
+            const matchA = a.title.match(/(?:^|\[)1-(\d+)/);
+            const matchB = b.title.match(/(?:^|\[)1-(\d+)/);
+
+            if (matchA && matchB) {
+                return parseInt(matchA[1]) - parseInt(matchB[1]);
+            } else if (matchA) {
+                return -1;
+            } else if (matchB) {
+                return 1;
+            } else {
+                return a.title.localeCompare(b.title, 'ko-KR');
+            }
+        });
+
         renderDocumentList();
         setupEventListeners();
     }
