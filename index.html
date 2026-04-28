@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>병원 약제팀 학습앱</title>
+    <!-- CDN for marked.js (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-book-medical"></i> 병원 약제팀 학습앱</h2>
+            </div>
+            
+            <div class="search-container">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="전체">전체</button>
+                <button class="tab-btn" data-tab="규정">규정</button>
+                <button class="tab-btn" data-tab="지침">지침</button>
+            </div>
+
+            <div class="document-list" id="documentList">
+                <!-- Document items will be rendered here dynamically -->
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="contentPlaceholder" class="placeholder-content">
+                <i class="fa-regular fa-file-lines fa-3x"></i>
+                <p>좌측에서 문서를 선택해주세요.</p>
+            </div>
+            
+            <div id="markdownViewer" class="markdown-viewer hidden">
+                <div class="viewer-header">
+                    <h1 id="docTitle"></h1>
+                    <div id="searchNavigator" class="search-navigator hidden">
+                        <span id="matchCount">0 / 0</span>
+                        <button id="prevMatchBtn" title="이전 결과"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button id="nextMatchBtn" title="다음 결과"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                </div>
+                <div class="doc-meta">
+                    <span id="docCategory" class="badge"></span>
+                </div>
+                <div id="markdownContent" class="markdown-body"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Data source -->
+    <script src="data.js"></script>
+    <!-- Main App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
