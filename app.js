@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             origHeader.style.borderBottom = '1px solid var(--border-color)';
             origHeader.style.marginBottom = '10px';
             origHeader.style.marginTop = '20px';
-            origHeader.textContent = `${currentFilter} 목록`;
+            origHeader.textContent = `${currentFilter === '업무정리' ? '조제실 업무 정리' : currentFilter} 목록`;
             documentList.appendChild(origHeader);
             
             renderItems(originalDocs, false);
