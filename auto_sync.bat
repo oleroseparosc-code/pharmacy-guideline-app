@@ -1,2 +1,2 @@
 @echo off
-python "c:\Users\duih\Desktop\ì½”ë”©\auto_sync.py"
+python "c:\Users\duih\Desktop\ÄÚµù\º´¿ø_¾àÁ¦ÆÀ_ÇÐ½À¾Û\auto_sync.py"

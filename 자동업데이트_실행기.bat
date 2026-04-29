@@ -5,11 +5,11 @@ echo 약제팀 규정 지침 앱 - 자동 업데이트 실행기
 echo ========================================================
 echo [1/4] PDF 변환 중... (1-3분 소요)
 cd /d "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
-python "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\extract_with_images.py"
+python -u "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\extract_with_images.py"
 
 echo.
 echo [2/4] 이미지 및 텍스트 정제 중...
-python "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\fix_images2.py"
+python -u "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\fix_images2.py"
 
 echo.
 echo [3/4] Git 업로드 준비...
