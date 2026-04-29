@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="style.css">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Toast UI Editor CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor-plugin-color-syntax/latest/toastui-editor-plugin-color-syntax.min.css" />
 </head>
 <body>
     <div class="app-container" id="appContainer">
@@ -49,23 +54,39 @@
                 <button id="backBtn" class="back-btn"><i class="fa-solid fa-arrow-left"></i> 목록으로</button>
                 <div class="viewer-header">
                     <h1 id="docTitle"></h1>
-                    <div id="searchNavigator" class="search-navigator hidden">
-                        <span id="matchCount">0 / 0</span>
-                        <button id="prevMatchBtn" title="이전 결과"><i class="fa-solid fa-chevron-up"></i></button>
-                        <button id="nextMatchBtn" title="다음 결과"><i class="fa-solid fa-chevron-down"></i></button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="editBtn" class="btn btn-primary" style="padding: 8px 15px; border: none; background: var(--primary-color); color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-pen"></i> 문서 편집</button>
+                        <div id="searchNavigator" class="search-navigator hidden">
+                            <span id="matchCount">0 / 0</span>
+                            <button id="prevMatchBtn" title="이전 결과"><i class="fa-solid fa-chevron-up"></i></button>
+                            <button id="nextMatchBtn" title="다음 결과"><i class="fa-solid fa-chevron-down"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div class="doc-meta">
                     <span id="docCategory" class="badge"></span>
                 </div>
                 <div id="markdownContent" class="markdown-body"></div>
+                
+                <div id="editorContainer" class="hidden">
+                    <div id="toastEditor"></div>
+                    <div class="editor-actions" style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button id="cancelBtn" class="btn" style="padding: 10px 20px; border: 1px solid #ccc; background: white; border-radius: 5px; cursor: pointer;">취소</button>
+                        <button id="saveBtn" class="btn" style="padding: 10px 20px; border: none; background: #28a745; color: white; border-radius: 5px; cursor: pointer;"><i class="fa-solid fa-save"></i> 저장</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- Toast UI Editor JS -->
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/editor-plugin-color-syntax/latest/toastui-editor-plugin-color-syntax.min.js"></script>
+
     <!-- Data source -->
     <script src="data.js"></script>
     <!-- Main App Logic -->
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>

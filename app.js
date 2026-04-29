@@ -22,6 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeDocId = null;
     let highlightElements = [];
     let currentHighlightIndex = -1;
+    let editor = null;
+    
+    // Editor Elements
+    const editBtn = document.getElementById('editBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const editorContainer = document.getElementById('editorContainer');
 
     // Initialize App
     function init() {
@@ -255,7 +262,87 @@ document.addEventListener('DOMContentLoaded', () => {
             highlightElements = [];
             document.querySelector('.main-content').scrollTop = 0;
         }
+        
+        // Reset edit button state when switching documents
+        if (editorContainer && markdownContent && editBtn) {
+            editorContainer.classList.add('hidden');
+            markdownContent.classList.remove('hidden');
+            editBtn.style.display = 'flex';
+        }
     }
+    
+    // Editor Logic
+    // Editor Logic
+    editBtn.addEventListener('click', () => {
+        markdownContent.classList.add('hidden');
+        editorContainer.classList.remove('hidden');
+        editBtn.style.display = 'none';
+        
+        const doc = documentsData.find(d => d.id === activeDocId);
+        
+        if (!editor) {
+            editor = new toastui.Editor({
+                el: document.getElementById('toastEditor'),
+                height: '600px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                initialValue: doc.content,
+                plugins: [toastui.Editor.plugin.colorSyntax],
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        const formData = new FormData();
+                        formData.append('image', blob);
+                        try {
+                            const response = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await response.json();
+                            callback(data.url, 'image');
+                        } catch (err) {
+                            console.error('Image upload failed', err);
+                            alert('이미지 업로드에 실패했습니다. (앱_실행하기.bat 로 실행 중인지 확인)');
+                        }
+                    }
+                }
+            });
+        } else {
+            editor.setMarkdown(doc.content);
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        editorContainer.classList.add('hidden');
+        markdownContent.classList.remove('hidden');
+        editBtn.style.display = 'flex';
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        const newContent = editor.getMarkdown();
+        const doc = documentsData.find(d => d.id === activeDocId);
+        doc.content = newContent;
+        
+        try {
+            const response = await fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: activeDocId, content: newContent })
+            });
+            
+            if (response.ok) {
+                alert('저장되었습니다.');
+                editorContainer.classList.add('hidden');
+                markdownContent.classList.remove('hidden');
+                editBtn.style.display = 'flex';
+                viewDocument(doc); // Re-render the view
+            } else {
+                alert('저장에 실패했습니다. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
+            }
+        } catch (e) {
+            alert('서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
+            console.error(e);
+        }
+    });
 
     function updateHighlightSelection() {
         if (highlightElements.length === 0) return;
