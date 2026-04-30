@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const documentList = document.getElementById('documentList');
+    const deployBtn = document.getElementById('deployBtn');
     
     const contentPlaceholder = document.getElementById('contentPlaceholder');
     const markdownViewer = document.getElementById('markdownViewer');
@@ -89,6 +90,33 @@ document.addEventListener('DOMContentLoaded', () => {
         backBtn.addEventListener('click', () => {
             appContainer.classList.remove('mobile-view-doc');
         });
+
+        // Deploy button
+        if (deployBtn) {
+            deployBtn.addEventListener('click', async () => {
+                if (confirm('현재까지의 수정 내용을 링크(웹)에 반영하시겠습니까?\n(약 10초 정도 소요됩니다.)')) {
+                    const originalText = deployBtn.innerHTML;
+                    deployBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 반영 중...';
+                    deployBtn.disabled = true;
+                    
+                    try {
+                        const response = await fetch('/api/deploy', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok) {
+                            alert(data.message);
+                        } else {
+                            alert('오류: ' + data.message);
+                        }
+                    } catch (e) {
+                        alert('서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
+                        console.error(e);
+                    } finally {
+                        deployBtn.innerHTML = originalText;
+                        deployBtn.disabled = false;
+                    }
+                }
+            });
+        }
     }
 
     // Render Document List

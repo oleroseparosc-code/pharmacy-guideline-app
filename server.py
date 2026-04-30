@@ -6,6 +6,7 @@ import urllib.parse
 import uuid
 from email.message import EmailMessage
 from email.parser import BytesParser
+import subprocess
 
 PORT = 8000
 DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
@@ -123,6 +124,39 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     return
             except Exception as e:
                 print("Error uploading:", e)
+                self.send_response(500)
+                self.end_headers()
+                return
+
+        elif self.path == '/api/deploy':
+            try:
+                # Git 명령어 실행하여 변경사항 배포
+                subprocess.run(['git', 'add', '.'], cwd=DIRECTORY, check=True)
+                
+                # 변경사항이 있는지 확인
+                status_result = subprocess.run(['git', 'status', '--porcelain'], cwd=DIRECTORY, capture_output=True, text=True)
+                
+                if status_result.stdout.strip():
+                    subprocess.run(['git', 'commit', '-m', '웹 에디터에서 내용 수정 및 업데이트'], cwd=DIRECTORY, check=True)
+                    subprocess.run(['git', 'push', 'origin', 'main'], cwd=DIRECTORY, check=True)
+                    message = "변경사항이 링크(웹)에 성공적으로 반영되었습니다. (약 1~2분 후 새로고침 해보세요)"
+                else:
+                    message = "수정된 내용이 없습니다."
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'success', 'message': message}).encode('utf-8'))
+                return
+            except subprocess.CalledProcessError as e:
+                print("Git error:", e)
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'error', 'message': f'배포 중 오류가 발생했습니다: {str(e)}'}).encode('utf-8'))
+                return
+            except Exception as e:
+                print("Deploy error:", e)
                 self.send_response(500)
                 self.end_headers()
                 return
