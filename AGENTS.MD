@@ -57,8 +57,25 @@ This project is the hospital pharmacy guideline learning app.
 - The git repository is inside `병원_약제팀_학습앱`.
 - Main branch: `main`
 - Remote: `https://github.com/oleroseparosc-code/pharmacy-guideline-app.git`
-- The in-app deploy button calls `/api/deploy`, which runs `git add .`, commits if there are changes, then pushes to `origin main`.
+- The in-app deploy button calls `/api/deploy`, which builds `dist`, commits if there are changes, then pushes to `origin main` and `origin HEAD:cloudflare/workers-autoconfig`.
+- Cloudflare Workers is the real public execution app: `https://pharmacy-guideline-app.olerose-parosc.workers.dev/`.
+- GitHub Pages is not the production verification target for this app.
 - The public website link must never change during deployment. Do not rename the repository, change the GitHub Pages source, alter the deploy branch, move the app to a different hosting target, or introduce any deployment flow that changes the existing URL unless the user explicitly asks for a URL migration.
+- Cloudflare must deploy from `dist`; do not change `wrangler.jsonc` assets directory away from `./dist` unless replacing the deploy architecture deliberately.
+
+## Runtime Modes
+
+- `localhost`, `127.0.0.1`, and local empty host are editor mode.
+- The Workers URL is learning app mode and must hide document editing/deploy controls.
+- Do not require `?preview=learning` for the public Workers URL to behave as the learning app.
+
+## Editing and Font Size Rules
+
+- Manual editor saves must update both `data.js` and `custom_edits.json`.
+- Preserve `[4-1]의약품관리규정` in the `규정` tab.
+- Font size edits use shortcode storage: `[font size="24"]text[/font]`.
+- Toast UI may save font widgets as escaped shortcode or `$$widget...$$`; normalize those forms before saving, reopening, or rendering.
+- Learning/public rendering must turn font shortcode into real inline `<span style="font-size: ...px;">...</span>` output.
 
 ## Working Rules
 
@@ -69,6 +86,7 @@ This project is the hospital pharmacy guideline learning app.
 - Before changing extraction/cleanup scripts, check whether the change could overwrite manual edits.
 - After JavaScript edits, run `node --check app.js` and, if `data.js` changed, `node --check data.js`.
 - After Python edits, run `python -m py_compile` on the changed Python files.
+- Before claiming editor changes are fixed, run the relevant `tests/*.test.js` files and verify the behavior in `http://localhost:8000/` when possible.
 
 ## Known Issues / Risks
 

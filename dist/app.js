@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editorContainer = document.getElementById('editorContainer');
     const fontSizeSelect = document.getElementById('fontSizeSelect');
     const applyFontSizeBtn = document.getElementById('applyFontSizeBtn');
+    const FONT_SIZE_VALUES = '12|14|16|18|20|24|28|32';
 
     // Initialize App
     function init() {
@@ -352,16 +353,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     height: '600px',
                     initialEditType: 'wysiwyg',
                     previewStyle: 'vertical',
-                    initialValue: doc.content,
+                    initialValue: normalizeFontMarkup(doc.content),
                     plugins: [toastui.Editor.plugin.colorSyntax],
                     widgetRules: [
                         {
                             rule: /\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g,
                             toDOM(text) {
-                                const match = text.match(/^\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]$/);
+                                const normalizedText = normalizeFontMarkup(text);
+                                const match = normalizedText.match(/^\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]$/);
                                 const span = document.createElement('span');
                                 span.style.fontSize = `${match ? match[1] : 16}px`;
-                                span.textContent = match ? match[2] : text;
+                                span.textContent = match ? match[2] : normalizedText;
                                 return span;
                             }
                         }
@@ -385,11 +387,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else {
-                editor.setMarkdown(doc.content);
+                editor.setMarkdown(normalizeFontMarkup(doc.content));
             }
         });
 
         if (applyFontSizeBtn && fontSizeSelect) {
+            applyFontSizeBtn.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+            });
             applyFontSizeBtn.addEventListener('click', applySelectedFontSize);
         }
     }
@@ -410,8 +415,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function normalizeFontMarkup(markdown) {
+        return String(markdown || '')
+            .replace(/\$\$widget\d+\s+([\s\S]*?)\$\$/g, '$1')
+            .replace(new RegExp(`\\\\\\[font size=\\\\?"(${FONT_SIZE_VALUES})\\\\?"\\\\\\]`, 'g'), '[font size="$1"]')
+            .replace(/\\\[\/font\\\]/g, '[/font]');
+    }
+
     function renderFontSizeMarkup(markdown) {
-        return markdown
+        return normalizeFontMarkup(markdown)
             .replace(/\\?<span style="font-size:\s*(12|14|16|18|20|24|28|32)px;">([\s\S]*?)\\?<\/span\\?>/g, '<span style="font-size: $1px;">$2</span>')
             .replace(/\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g, '<span style="font-size: $1px;">$2</span>');
     }
@@ -431,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveBtn.addEventListener('click', async () => {
-        const newContent = editor.getMarkdown();
+        const newContent = normalizeFontMarkup(editor.getMarkdown());
         const doc = documentsData.find(d => d.id === activeDocId);
         doc.content = newContent;
         

@@ -87,7 +87,11 @@ const context = {
       id: 'doc-1',
       title: '테스트 문서',
       category: '업무정리',
-      content: '[font size="24"]큰 글자[/font]',
+      content: [
+        '[font size="24"]큰 글자[/font]',
+        '\\[font size=\\"18\\"\\]이스케이프 글자\\[/font\\]',
+        '$$widget0 [font size="20"]위젯 글자[/font]$$',
+      ].join('\n'),
     },
   ],
   marked: {
@@ -108,4 +112,12 @@ createdItems[0].click();
 assert(
   elements.markdownContent.innerHTML.includes('<span style="font-size: 24px;">큰 글자</span>'),
   '학습용 화면에서는 글자 크기 표기를 실제 span 스타일로 렌더링해야 합니다.'
+);
+assert(
+  elements.markdownContent.innerHTML.includes('<span style="font-size: 18px;">이스케이프 글자</span>'),
+  '이스케이프된 글자 크기 표기도 실제 span 스타일로 렌더링해야 합니다.'
+);
+assert(
+  elements.markdownContent.innerHTML.includes('<span style="font-size: 20px;">위젯 글자</span>'),
+  'Toast UI 위젯 저장 표기도 실제 span 스타일로 렌더링해야 합니다.'
 );

@@ -34,11 +34,6 @@ class MockElement {
     return this.listeners.click({ target: this });
   }
 
-  dispatch(event, payload = { target: this }) {
-    if (!this.listeners[event]) return undefined;
-    return this.listeners[event]({ target: this, ...payload });
-  }
-
   querySelectorAll() {
     return [];
   }
@@ -71,17 +66,13 @@ const elementIds = [
 ];
 
 const elements = Object.fromEntries(elementIds.map(id => [id, new MockElement(id)]));
-elements.fontSizeSelect.value = '24';
-
 const tabButtons = ['전체', '규정', '지침', '업무정리'].map(tab => {
   const button = new MockElement();
   button.dataset.tab = tab;
   return button;
 });
 const createdItems = [];
-let editorApi;
-let editorOptions;
-let preventedMouseDown = false;
+const saveBodies = [];
 
 elements.documentList.appendChild = child => {
   elements.documentList.children.push(child);
@@ -128,25 +119,24 @@ const context = {
     parse: markdown => `<p>${markdown}</p>`,
   },
   toastui: {
-    Editor: function Editor(options) {
-      editorOptions = options;
-      editorApi = {
-        getSelectedText: () => '선택 글자',
-        replaceSelection: value => {
-          editorApi.replaced = value;
-        },
-        getMarkdown: () => editorApi.replaced || '원본 내용',
+    Editor: function Editor() {
+      return {
+        getMarkdown: () => '$$widget0 [font size="24"]큰 글자[/font]$$\n\\[font size=\\"18\\"\\]작은 글자\\[/font\\]',
         setMarkdown: () => {},
-        focus: () => {
-          editorApi.focused = true;
-        },
       };
-      return editorApi;
     },
   },
-  alert: message => {
-    context.lastAlert = message;
+  fetch: async (url, options = {}) => {
+    if (url === '/api/save') {
+      saveBodies.push(JSON.parse(options.body));
+    }
+    return {
+      ok: true,
+      json: async () => ({ message: '웹 반영 완료' }),
+    };
   },
+  alert: () => {},
+  confirm: () => true,
 };
 
 context.toastui.Editor.plugin = { colorSyntax: {} };
@@ -156,18 +146,15 @@ vm.runInNewContext(source, context);
 
 createdItems[0].click();
 elements.editBtn.click();
-elements.applyFontSizeBtn.dispatch('mousedown', {
-  preventDefault: () => {
-    preventedMouseDown = true;
-  },
-});
-elements.applyFontSizeBtn.click();
 
-assert.strictEqual(
-  editorApi.replaced,
-  '[font size="24"]선택 글자[/font]',
-  '선택한 글자를 글자 크기 전용 표기로 감싸야 합니다.'
-);
-assert.strictEqual(editorApi.focused, true, '글자 크기 적용 후 편집기로 포커스를 돌려야 합니다.');
-assert(Array.isArray(editorOptions.widgetRules), '편집기 안에서 글자 크기 표기를 시각적으로 보여주는 위젯 규칙이 있어야 합니다.');
-assert.strictEqual(preventedMouseDown, true, '글자 크기 버튼은 클릭 전 편집기 선택 영역을 잃지 않도록 mousedown 기본 동작을 막아야 합니다.');
+Promise.resolve(elements.saveBtn.click()).then(() => {
+  assert.strictEqual(saveBodies.length, 1, '저장 API가 한 번 호출되어야 합니다.');
+  assert.strictEqual(
+    saveBodies[0].content,
+    '[font size="24"]큰 글자[/font]\n[font size="18"]작은 글자[/font]',
+    '저장 전에 Toast UI가 변형한 글자 크기 표기를 정상 shortcode로 정규화해야 합니다.'
+  );
+}).catch(error => {
+  console.error(error);
+  process.exit(1);
+});
