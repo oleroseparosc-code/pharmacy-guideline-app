@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('saveBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const editorContainer = document.getElementById('editorContainer');
+    const fontSizeSelect = document.getElementById('fontSizeSelect');
+    const applyFontSizeBtn = document.getElementById('applyFontSizeBtn');
 
     // Initialize App
     function init() {
@@ -369,6 +371,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 editor.setMarkdown(doc.content);
             }
         });
+
+        if (applyFontSizeBtn && fontSizeSelect) {
+            applyFontSizeBtn.addEventListener('click', applySelectedFontSize);
+        }
+    }
+
+    function applySelectedFontSize() {
+        if (!editor || typeof editor.replaceSelection !== 'function') {
+            alert('편집기를 먼저 열어주세요.');
+            return;
+        }
+
+        const size = fontSizeSelect.value;
+        const selectedText = typeof editor.getSelectedText === 'function' ? editor.getSelectedText() : '';
+        const text = selectedText || '글자';
+        editor.replaceSelection(`<span style="font-size: ${size}px;">${text}</span>`);
+
+        if (typeof editor.focus === 'function') {
+            editor.focus();
+        }
     }
 
     cancelBtn.addEventListener('click', () => {

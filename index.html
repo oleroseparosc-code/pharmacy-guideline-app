@@ -72,6 +72,25 @@
                 <div id="markdownContent" class="markdown-body"></div>
                 
                 <div id="editorContainer" class="hidden">
+                    <div class="editor-format-toolbar" aria-label="문서 서식 도구">
+                        <label class="font-size-control" for="fontSizeSelect">
+                            <i class="fa-solid fa-text-height" aria-hidden="true"></i>
+                            <span>글자 크기</span>
+                            <select id="fontSizeSelect">
+                                <option value="12">12px</option>
+                                <option value="14">14px</option>
+                                <option value="16" selected>16px</option>
+                                <option value="18">18px</option>
+                                <option value="20">20px</option>
+                                <option value="24">24px</option>
+                                <option value="28">28px</option>
+                                <option value="32">32px</option>
+                            </select>
+                        </label>
+                        <button id="applyFontSizeBtn" class="format-icon-btn" type="button" title="선택한 글자 크기 적용">
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <div id="toastEditor"></div>
                     <div class="editor-actions" style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
                         <button id="cancelBtn" class="btn" style="padding: 10px 20px; border: 1px solid #ccc; background: white; border-radius: 5px; cursor: pointer;">취소</button>
