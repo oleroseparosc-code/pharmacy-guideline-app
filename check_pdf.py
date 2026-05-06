@@ -2,7 +2,7 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 import fitz
 
-pdf_path = r'c:\Users\duih\Desktop\코딩\규정 지침 앱\조제실 업무 정리_주친 외퇴 7988.pdf'
+pdf_path = r'c:\Users\duih\Desktop\코딩\규정 지침 앱\조제실 업무 정리_추긴 외퇴 7988.pdf'
 doc = fitz.open(pdf_path)
 
 print("=== 각 페이지 상세 분석 (1-based) ===")

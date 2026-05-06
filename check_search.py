@@ -7,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 import fitz
 import pymupdf4llm
 
-pdf_path = r'c:\Users\duih\Desktop\코딩\규정 지침 앱\조제실 업무 정리_주친 외퇴 7988.pdf'
+pdf_path = r'c:\Users\duih\Desktop\코딩\규정 지침 앱\조제실 업무 정리_추긴 외퇴 7988.pdf'
 doc = fitz.open(pdf_path)
 
 print("=== get_text 방식으로 '재불출' 검색 ===")

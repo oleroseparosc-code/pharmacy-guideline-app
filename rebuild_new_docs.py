@@ -22,9 +22,10 @@ IMG_DIR = os.path.join(APP_DIR, "images")
 DATA_JS = os.path.join(APP_DIR, "data.js")
 
 TARGET_PDFS = [
-    "조제실 업무 정리_주친 외퇴 7988.pdf",
+    "조제실 업무 정리_추긴 외퇴 7988.pdf",
     "외래약국 업무 내용 정리.pdf",
     "과내약 접수 시 주의 사항 및 약품 불출 처리 기준 _20260429.pdf",
+    "[4-1]의약품관리규정.pdf",
 ]
 
 LOGO_SIZES = {3906, 14015, 16445}
