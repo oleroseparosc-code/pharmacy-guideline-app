@@ -237,8 +237,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(400)
             self.end_headers()
 
+class ThreadingReusableTCPServer(socketserver.ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
 Handler = CustomHandler
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
+with ThreadingReusableTCPServer(("", PORT), Handler) as httpd:
     print(f"서버가 포트 {PORT}에서 실행 중입니다...")
     print(f"인터넷 브라우저 주소창에 http://localhost:{PORT} 를 입력하세요.")
     httpd.serve_forever()
