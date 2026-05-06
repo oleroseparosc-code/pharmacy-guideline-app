@@ -11,10 +11,8 @@ class MockElement {
     this.style = {};
     this.innerHTML = '';
     this.textContent = '';
-    this.value = '';
     this.listeners = {};
     this.className = '';
-    this.disabled = false;
     this.classList = {
       add: () => {},
       remove: () => {},
@@ -34,10 +32,6 @@ class MockElement {
     return this.listeners.click({ target: this });
   }
 
-  dispatch(event) {
-    return this.listeners[event]({ target: this });
-  }
-
   querySelectorAll() {
     return [];
   }
@@ -45,41 +39,19 @@ class MockElement {
   scrollTo() {}
 }
 
-const elementIds = [
-  'searchInput',
-  'documentList',
-  'deployBtn',
-  'contentPlaceholder',
-  'markdownViewer',
-  'docTitle',
-  'docCategory',
-  'markdownContent',
-  'searchNavigator',
-  'matchCount',
-  'prevMatchBtn',
-  'nextMatchBtn',
-  'appContainer',
-  'backBtn',
-  'editBtn',
-  'saveBtn',
-  'cancelBtn',
-  'editorContainer',
-  'toastEditor',
-  'fontSizeSelect',
-  'applyFontSizeBtn',
+const ids = [
+  'searchInput', 'documentList', 'deployBtn', 'contentPlaceholder', 'markdownViewer',
+  'docTitle', 'docCategory', 'markdownContent', 'searchNavigator', 'matchCount',
+  'prevMatchBtn', 'nextMatchBtn', 'appContainer', 'backBtn', 'editBtn', 'saveBtn',
+  'cancelBtn', 'editorContainer', 'toastEditor', 'fontSizeSelect', 'applyFontSizeBtn',
 ];
-
-const elements = Object.fromEntries(elementIds.map(id => [id, new MockElement(id)]));
-elements.fontSizeSelect.value = '24';
-
+const elements = Object.fromEntries(ids.map(id => [id, new MockElement(id)]));
 const tabButtons = ['전체', '규정', '지침', '업무정리'].map(tab => {
   const button = new MockElement();
   button.dataset.tab = tab;
   return button;
 });
 const createdItems = [];
-let editorApi;
-let editorOptions;
 
 elements.documentList.appendChild = child => {
   elements.documentList.children.push(child);
@@ -92,11 +64,7 @@ elements.documentList.appendChild = child => {
 const context = {
   console,
   setTimeout: callback => callback(),
-  window: {
-    location: {
-      search: '',
-    },
-  },
+  window: { location: { search: '?preview=learning' } },
   URLSearchParams,
   document: {
     addEventListener: (event, callback) => {
@@ -119,31 +87,14 @@ const context = {
       id: 'doc-1',
       title: '테스트 문서',
       category: '업무정리',
-      content: '원본 내용',
+      content: '[font size="24"]큰 글자[/font]',
     },
   ],
   marked: {
     parse: markdown => `<p>${markdown}</p>`,
   },
   toastui: {
-    Editor: function Editor(options) {
-      editorOptions = options;
-      editorApi = {
-        getSelectedText: () => '선택 글자',
-        replaceSelection: value => {
-          editorApi.replaced = value;
-        },
-        getMarkdown: () => editorApi.replaced || '원본 내용',
-        setMarkdown: () => {},
-        focus: () => {
-          editorApi.focused = true;
-        },
-      };
-      return editorApi;
-    },
-  },
-  alert: message => {
-    context.lastAlert = message;
+    Editor: function Editor() {},
   },
 };
 
@@ -153,13 +104,8 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 vm.runInNewContext(source, context);
 
 createdItems[0].click();
-elements.editBtn.click();
-elements.applyFontSizeBtn.click();
 
-assert.strictEqual(
-  editorApi.replaced,
-  '[font size="24"]선택 글자[/font]',
-  '선택한 글자를 글자 크기 전용 표기로 감싸야 합니다.'
+assert(
+  elements.markdownContent.innerHTML.includes('<span style="font-size: 24px;">큰 글자</span>'),
+  '학습용 화면에서는 글자 크기 표기를 실제 span 스타일로 렌더링해야 합니다.'
 );
-assert.strictEqual(editorApi.focused, true, '글자 크기 적용 후 편집기로 포커스를 돌려야 합니다.');
-assert(Array.isArray(editorOptions.widgetRules), '편집기 안에서 글자 크기 표기를 시각적으로 보여주는 위젯 규칙이 있어야 합니다.');

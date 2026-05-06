@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render Markdown
         // marked.parse() is provided by the CDN script
         try {
-            let htmlContent = marked.parse(doc.content, { breaks: true });
+            let htmlContent = marked.parse(renderFontSizeMarkup(doc.content), { breaks: true });
             
             // Highlight the search query in the main content if it exists
             if (searchQuery) {
@@ -349,6 +349,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     previewStyle: 'vertical',
                     initialValue: doc.content,
                     plugins: [toastui.Editor.plugin.colorSyntax],
+                    widgetRules: [
+                        {
+                            rule: /\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g,
+                            toDOM(text) {
+                                const match = text.match(/^\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]$/);
+                                const span = document.createElement('span');
+                                span.style.fontSize = `${match ? match[1] : 16}px`;
+                                span.textContent = match ? match[2] : text;
+                                return span;
+                            }
+                        }
+                    ],
                     hooks: {
                         addImageBlobHook: async (blob, callback) => {
                             const formData = new FormData();
@@ -386,11 +398,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const size = fontSizeSelect.value;
         const selectedText = typeof editor.getSelectedText === 'function' ? editor.getSelectedText() : '';
         const text = selectedText || '글자';
-        editor.replaceSelection(`<span style="font-size: ${size}px;">${text}</span>`);
+        editor.replaceSelection(`[font size="${size}"]${text.replace(/\[\/font\]/g, '')}[/font]`);
 
         if (typeof editor.focus === 'function') {
             editor.focus();
         }
+    }
+
+    function renderFontSizeMarkup(markdown) {
+        return markdown
+            .replace(/\\?<span style="font-size:\s*(12|14|16|18|20|24|28|32)px;">([\s\S]*?)\\?<\/span\\?>/g, '<span style="font-size: $1px;">$2</span>')
+            .replace(/\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g, '<span style="font-size: $1px;">$2</span>');
     }
 
     cancelBtn.addEventListener('click', () => {
