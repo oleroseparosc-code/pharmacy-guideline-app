@@ -2,6 +2,7 @@ import http.server
 import socketserver
 import json
 import os
+import shutil
 import urllib.parse
 import urllib.request
 import uuid
@@ -13,6 +14,21 @@ import time
 PORT = 8000
 DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
 PUBLIC_DATA_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/data.js"
+DIST_FILES = ["index.html", "app.js", "data.js", "style.css"]
+
+def build_dist():
+    dist_path = os.path.join(DIRECTORY, "dist")
+    os.makedirs(dist_path, exist_ok=True)
+
+    for file_name in DIST_FILES:
+        shutil.copy2(os.path.join(DIRECTORY, file_name), os.path.join(dist_path, file_name))
+
+    src_images = os.path.join(DIRECTORY, "images")
+    dst_images = os.path.join(dist_path, "images")
+    if os.path.exists(dst_images):
+        shutil.rmtree(dst_images)
+    if os.path.isdir(src_images):
+        shutil.copytree(src_images, dst_images)
 
 def read_local_data_js():
     data_js_path = os.path.join(DIRECTORY, 'data.js')
@@ -163,6 +179,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path == '/api/deploy':
             try:
+                build_dist()
                 # Git 명령어 실행하여 변경사항 배포
                 subprocess.run(['git', 'add', '.'], cwd=DIRECTORY, check=True)
                 

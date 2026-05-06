@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>약제팀 규정 및 업무 지침</title>
+    <!-- Web Font: Pretendard -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- CDN for marked.js (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Toast UI Editor CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor-plugin-color-syntax/latest/toastui-editor-plugin-color-syntax.min.css" />
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-book-medical"></i> 약제팀 규정 및 업무 지침</h2>
+                <button id="deployBtn" class="btn btn-primary" style="margin-top: 10px; width: 100%; padding: 8px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 링크(웹)에 변경사항 적용
+                </button>
+            </div>
+            
+            <div class="search-container">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="전체">전체</button>
+                <button class="tab-btn" data-tab="규정">규정</button>
+                <button class="tab-btn" data-tab="지침">지침</button>
+                <button class="tab-btn" data-tab="업무정리">조제실 업무 정리</button>
+            </div>
+
+            <div class="document-list" id="documentList">
+                <!-- Document items will be rendered here dynamically -->
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="contentPlaceholder" class="placeholder-content">
+                <i class="fa-regular fa-file-lines fa-3x"></i>
+                <p>좌측에서 문서를 선택해주세요.</p>
+            </div>
+            
+            <div id="markdownViewer" class="markdown-viewer hidden">
+                <button id="backBtn" class="back-btn"><i class="fa-solid fa-arrow-left"></i> 목록으로</button>
+                <div class="viewer-header">
+                    <h1 id="docTitle"></h1>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="editBtn" class="btn btn-primary" style="padding: 8px 15px; border: none; background: var(--primary-color); color: white; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-pen"></i> 문서 편집</button>
+                        <div id="searchNavigator" class="search-navigator hidden">
+                            <span id="matchCount">0 / 0</span>
+                            <button id="prevMatchBtn" title="이전 결과"><i class="fa-solid fa-chevron-up"></i></button>
+                            <button id="nextMatchBtn" title="다음 결과"><i class="fa-solid fa-chevron-down"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="doc-meta">
+                    <span id="docCategory" class="badge"></span>
+                </div>
+                <div id="markdownContent" class="markdown-body"></div>
+                
+                <div id="editorContainer" class="hidden">
+                    <div class="editor-format-toolbar" aria-label="문서 서식 도구">
+                        <label class="font-size-control" for="fontSizeSelect">
+                            <i class="fa-solid fa-text-height" aria-hidden="true"></i>
+                            <span>글자 크기</span>
+                            <select id="fontSizeSelect">
+                                <option value="12">12px</option>
+                                <option value="14">14px</option>
+                                <option value="16" selected>16px</option>
+                                <option value="18">18px</option>
+                                <option value="20">20px</option>
+                                <option value="24">24px</option>
+                                <option value="28">28px</option>
+                                <option value="32">32px</option>
+                            </select>
+                        </label>
+                        <button id="applyFontSizeBtn" class="format-icon-btn" type="button" title="선택한 글자 크기 적용">
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="toastEditor"></div>
+                    <div class="editor-actions" style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button id="cancelBtn" class="btn" style="padding: 10px 20px; border: 1px solid #ccc; background: white; border-radius: 5px; cursor: pointer;">취소</button>
+                        <button id="saveBtn" class="btn" style="padding: 10px 20px; border: none; background: #28a745; color: white; border-radius: 5px; cursor: pointer;"><i class="fa-solid fa-save"></i> 저장</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast UI Editor JS -->
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/editor-plugin-color-syntax/latest/toastui-editor-plugin-color-syntax.min.js"></script>
+
+    <!-- Data source & App Logic with Cache Busting -->
+    <script>
+        // 현재 시간을 기반으로 고유한 버전 문자열을 만들어 캐시를 무시하게 합니다.
+        var version = new Date().getTime();
+        document.write('<script src="data.js?v=' + version + '"><\/script>');
+        document.write('<script src="app.js?v=' + version + '"><\/script>');
+    </script>
+</body>
+</html>
