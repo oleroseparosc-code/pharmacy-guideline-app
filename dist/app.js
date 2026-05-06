@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentHighlightIndex = -1;
     let editor = null;
     const urlParams = new URLSearchParams(window.location.search);
-    const isLearningPreview = urlParams.get('preview') === 'learning';
+    const hostName = window.location.hostname || '';
+    const isLocalEditorHost = ['localhost', '127.0.0.1', '::1', ''].includes(hostName);
+    const isEditorMode = isLocalEditorHost && urlParams.get('preview') !== 'learning';
+    const isLearningPreview = !isEditorMode;
     
     // Editor Elements
     const editBtn = document.getElementById('editBtn');
