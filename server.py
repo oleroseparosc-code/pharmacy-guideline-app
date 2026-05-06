@@ -12,7 +12,7 @@ import time
 
 PORT = 8000
 DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
-PUBLIC_DATA_URL = "https://oleroseparosc-code.github.io/pharmacy-guideline-app/data.js"
+PUBLIC_DATA_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/data.js"
 
 def read_local_data_js():
     data_js_path = os.path.join(DIRECTORY, 'data.js')
@@ -172,9 +172,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 if status_result.stdout.strip():
                     subprocess.run(['git', 'commit', '-m', '웹 에디터에서 내용 수정 및 업데이트'], cwd=DIRECTORY, check=True)
                     subprocess.run(['git', 'push', 'origin', 'main'], cwd=DIRECTORY, check=True)
+                    subprocess.run(['git', 'push', 'origin', 'HEAD:cloudflare/workers-autoconfig'], cwd=DIRECTORY, check=True)
                     synced, sync_error = wait_for_public_data_sync()
                     if synced:
-                        message = "변경사항이 실제 링크(웹)에 반영된 것을 확인했습니다. 새로고침하면 최신 내용이 보입니다."
+                        message = "변경사항이 실제 Workers 링크(웹)에 반영된 것을 확인했습니다. 새로고침하면 최신 내용이 보입니다."
                     else:
                         self.send_response(504)
                         self.send_header('Content-type', 'application/json')
