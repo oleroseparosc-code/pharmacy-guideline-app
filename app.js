@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let highlightElements = [];
     let currentHighlightIndex = -1;
     let editor = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLearningPreview = urlParams.get('preview') === 'learning';
     
     // Editor Elements
     const editBtn = document.getElementById('editBtn');
@@ -33,6 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize App
     function init() {
+        if (isLearningPreview && deployBtn) {
+            deployBtn.style.display = 'none';
+        }
+
         // Sort documentsData: 1-x documents numerically first, then alphabetically
         documentsData.sort((a, b) => {
             const matchA = a.title.match(/(?:^|\[)1-(\d+)/);
@@ -94,28 +100,52 @@ document.addEventListener('DOMContentLoaded', () => {
         // Deploy button
         if (deployBtn) {
             deployBtn.addEventListener('click', async () => {
-                if (confirm('현재까지의 수정 내용을 링크(웹)에 반영하시겠습니까?\n(약 10초 정도 소요됩니다.)')) {
-                    const originalText = deployBtn.innerHTML;
-                    deployBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 반영 중...';
-                    deployBtn.disabled = true;
-                    
-                    try {
-                        const response = await fetch('/api/deploy', { method: 'POST' });
-                        const data = await response.json();
-                        if (response.ok) {
-                            alert(data.message);
-                        } else {
-                            alert('오류: ' + data.message);
-                        }
-                    } catch (e) {
-                        alert('서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
-                        console.error(e);
-                    } finally {
-                        deployBtn.innerHTML = originalText;
-                        deployBtn.disabled = false;
-                    }
+                if (!confirm('현재까지의 수정 내용을 링크(웹)에 반영하시겠습니까?\n(약 10초 정도 소요됩니다.)')) {
+                    return;
+                }
+
+                try {
+                    const data = await deployChanges();
+                    alert(data.message);
+                } catch (e) {
+                    alert(e.message);
+                    console.error(e);
                 }
             });
+        }
+    }
+
+    async function deployChanges() {
+        const originalText = deployBtn ? deployBtn.innerHTML : '';
+        if (deployBtn) {
+            deployBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 반영 중...';
+            deployBtn.disabled = true;
+        }
+
+        try {
+            const response = await fetch('/api/deploy', { method: 'POST' });
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message ? `웹 반영 오류: ${data.message}` : '웹 반영에 실패했습니다.');
+            }
+
+            return data;
+        } catch (e) {
+            if (e.message && e.message.startsWith('웹 반영')) {
+                throw e;
+            }
+            throw new Error('서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
+        } finally {
+            if (deployBtn) {
+                deployBtn.innerHTML = originalText;
+                deployBtn.disabled = false;
+            }
         }
     }
 
@@ -295,54 +325,56 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editorContainer && markdownContent && editBtn) {
             editorContainer.classList.add('hidden');
             markdownContent.classList.remove('hidden');
-            editBtn.style.display = 'flex';
+            editBtn.style.display = isLearningPreview ? 'none' : 'flex';
         }
     }
     
     // Editor Logic
     // Editor Logic
-    editBtn.addEventListener('click', () => {
-        markdownContent.classList.add('hidden');
-        editorContainer.classList.remove('hidden');
-        editBtn.style.display = 'none';
-        
-        const doc = documentsData.find(d => d.id === activeDocId);
-        
-        if (!editor) {
-            editor = new toastui.Editor({
-                el: document.getElementById('toastEditor'),
-                height: '600px',
-                initialEditType: 'wysiwyg',
-                previewStyle: 'vertical',
-                initialValue: doc.content,
-                plugins: [toastui.Editor.plugin.colorSyntax],
-                hooks: {
-                    addImageBlobHook: async (blob, callback) => {
-                        const formData = new FormData();
-                        formData.append('image', blob);
-                        try {
-                            const response = await fetch('/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const data = await response.json();
-                            callback(data.url, 'image');
-                        } catch (err) {
-                            console.error('Image upload failed', err);
-                            alert('이미지 업로드에 실패했습니다. (앱_실행하기.bat 로 실행 중인지 확인)');
+    if (!isLearningPreview) {
+        editBtn.addEventListener('click', () => {
+            markdownContent.classList.add('hidden');
+            editorContainer.classList.remove('hidden');
+            editBtn.style.display = 'none';
+            
+            const doc = documentsData.find(d => d.id === activeDocId);
+            
+            if (!editor) {
+                editor = new toastui.Editor({
+                    el: document.getElementById('toastEditor'),
+                    height: '600px',
+                    initialEditType: 'wysiwyg',
+                    previewStyle: 'vertical',
+                    initialValue: doc.content,
+                    plugins: [toastui.Editor.plugin.colorSyntax],
+                    hooks: {
+                        addImageBlobHook: async (blob, callback) => {
+                            const formData = new FormData();
+                            formData.append('image', blob);
+                            try {
+                                const response = await fetch('/api/upload', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                const data = await response.json();
+                                callback(data.url, 'image');
+                            } catch (err) {
+                                console.error('Image upload failed', err);
+                                alert('이미지 업로드에 실패했습니다. (앱_실행하기.bat 로 실행 중인지 확인)');
+                            }
                         }
                     }
-                }
-            });
-        } else {
-            editor.setMarkdown(doc.content);
-        }
-    });
+                });
+            } else {
+                editor.setMarkdown(doc.content);
+            }
+        });
+    }
 
     cancelBtn.addEventListener('click', () => {
         editorContainer.classList.add('hidden');
         markdownContent.classList.remove('hidden');
-        editBtn.style.display = 'flex';
+        editBtn.style.display = isLearningPreview ? 'none' : 'flex';
     });
 
     saveBtn.addEventListener('click', async () => {
@@ -350,6 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const doc = documentsData.find(d => d.id === activeDocId);
         doc.content = newContent;
         
+        const originalSaveText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 및 웹 반영 중...';
+        saveBtn.disabled = true;
+
         try {
             const response = await fetch('/api/save', {
                 method: 'POST',
@@ -358,17 +394,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (response.ok) {
-                alert('저장되었습니다.');
+                const deployResult = await deployChanges();
+                alert(`저장되었습니다.\n${deployResult.message || '웹에도 자동으로 반영되었습니다.'}`);
                 editorContainer.classList.add('hidden');
                 markdownContent.classList.remove('hidden');
-                editBtn.style.display = 'flex';
+                editBtn.style.display = isLearningPreview ? 'none' : 'flex';
                 viewDocument(doc); // Re-render the view
             } else {
                 alert('저장에 실패했습니다. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
             }
         } catch (e) {
-            alert('서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
+            alert(e.message || '서버 연결 오류. 로컬 서버(앱_실행하기.bat)로 열었는지 확인하세요.');
             console.error(e);
+        } finally {
+            saveBtn.innerHTML = originalSaveText;
+            saveBtn.disabled = false;
         }
     });
 
