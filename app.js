@@ -156,13 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         documentList.innerHTML = '';
 
         // Filter original list based on tab only
-        const originalDocs = documentsData.filter(doc => currentFilter === '전체' || doc.category === currentFilter);
+        const originalDocs = documentsData.filter(doc => currentFilter === '전체' || getDocCategory(doc) === normalizeCategory(currentFilter));
 
         // If there's a search query, filter search results
         let searchResults = [];
         if (searchQuery) {
             documentsData.forEach(doc => {
-                const matchesFilter = currentFilter === '전체' || doc.category === currentFilter;
+                const matchesFilter = currentFilter === '전체' || getDocCategory(doc) === normalizeCategory(currentFilter);
                 if (!matchesFilter) return;
 
                 const titleMatch = doc.title.toLowerCase().includes(searchQuery);
@@ -246,8 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const meta = document.createElement('div');
             meta.className = 'doc-item-meta';
             const badge = document.createElement('span');
-            badge.className = `badge badge-${doc.category}`;
-            badge.textContent = doc.category;
+            const category = getDocCategory(doc);
+            badge.className = `badge badge-${category}`;
+            badge.textContent = category;
             meta.appendChild(badge);
             
             item.appendChild(title);
@@ -287,8 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Set metadata
         docTitle.textContent = doc.title;
-        docCategory.textContent = doc.category;
-        docCategory.className = `badge badge-${doc.category}`;
+        const category = getDocCategory(doc);
+        docCategory.textContent = category;
+        docCategory.className = `badge badge-${category}`;
 
         // Render Markdown
         // marked.parse() is provided by the CDN script
@@ -409,6 +411,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return markdown
             .replace(/\\?<span style="font-size:\s*(12|14|16|18|20|24|28|32)px;">([\s\S]*?)\\?<\/span\\?>/g, '<span style="font-size: $1px;">$2</span>')
             .replace(/\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g, '<span style="font-size: $1px;">$2</span>');
+    }
+
+    function normalizeCategory(category) {
+        return String(category || '').normalize('NFC').trim();
+    }
+
+    function getDocCategory(doc) {
+        return normalizeCategory(doc.category);
     }
 
     cancelBtn.addEventListener('click', () => {

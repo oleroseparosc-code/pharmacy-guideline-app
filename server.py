@@ -3,13 +3,46 @@ import socketserver
 import json
 import os
 import urllib.parse
+import urllib.request
 import uuid
 from email.message import EmailMessage
 from email.parser import BytesParser
 import subprocess
+import time
 
 PORT = 8000
 DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
+PUBLIC_DATA_URL = "https://oleroseparosc-code.github.io/pharmacy-guideline-app/data.js"
+
+def read_local_data_js():
+    data_js_path = os.path.join(DIRECTORY, 'data.js')
+    with open(data_js_path, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def normalize_data_js(content):
+    return content.replace('\r\n', '\n').strip()
+
+def wait_for_public_data_sync(timeout_seconds=180, interval_seconds=5):
+    local_data = normalize_data_js(read_local_data_js())
+    deadline = time.time() + timeout_seconds
+    last_error = None
+
+    while time.time() < deadline:
+        try:
+            url = f"{PUBLIC_DATA_URL}?v={int(time.time() * 1000)}"
+            request = urllib.request.Request(url, headers={'Cache-Control': 'no-cache'})
+            with urllib.request.urlopen(request, timeout=15) as response:
+                remote_data = normalize_data_js(response.read().decode('utf-8'))
+
+            if remote_data == local_data:
+                return True, None
+            last_error = "공개 링크의 data.js가 아직 최신 파일로 바뀌지 않았습니다."
+        except Exception as e:
+            last_error = str(e)
+
+        time.sleep(interval_seconds)
+
+    return False, last_error
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -139,14 +172,36 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 if status_result.stdout.strip():
                     subprocess.run(['git', 'commit', '-m', '웹 에디터에서 내용 수정 및 업데이트'], cwd=DIRECTORY, check=True)
                     subprocess.run(['git', 'push', 'origin', 'main'], cwd=DIRECTORY, check=True)
-                    message = "변경사항이 링크(웹)에 성공적으로 반영되었습니다. (약 1~2분 후 새로고침 해보세요)"
+                    synced, sync_error = wait_for_public_data_sync()
+                    if synced:
+                        message = "변경사항이 실제 링크(웹)에 반영된 것을 확인했습니다. 새로고침하면 최신 내용이 보입니다."
+                    else:
+                        self.send_response(504)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            'status': 'error',
+                            'message': f'GitHub 업로드는 완료됐지만 실제 링크 반영 확인이 아직 안 됐습니다. 잠시 후 다시 저장하거나 새로고침해 주세요. ({sync_error})'
+                        }, ensure_ascii=False).encode('utf-8'))
+                        return
                 else:
-                    message = "수정된 내용이 없습니다."
+                    synced, sync_error = wait_for_public_data_sync(timeout_seconds=60)
+                    if synced:
+                        message = "수정된 내용은 이미 실제 링크(웹)에 반영되어 있습니다."
+                    else:
+                        self.send_response(504)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            'status': 'error',
+                            'message': f'수정된 로컬 내용과 실제 링크 내용이 아직 다릅니다. 다시 저장해 주세요. ({sync_error})'
+                        }, ensure_ascii=False).encode('utf-8'))
+                        return
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status': 'success', 'message': message}).encode('utf-8'))
+                self.wfile.write(json.dumps({'status': 'success', 'message': message}, ensure_ascii=False).encode('utf-8'))
                 return
             except subprocess.CalledProcessError as e:
                 print("Git error:", e)
