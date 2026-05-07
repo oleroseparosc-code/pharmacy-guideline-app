@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.content = newContent;
         
         const originalSaveText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 및 웹 반영 중...';
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
         saveBtn.disabled = true;
 
         try {
@@ -459,8 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (response.ok) {
-                const deployResult = await deployChanges();
-                alert(`저장되었습니다.\n${deployResult.message || '웹에도 자동으로 반영되었습니다.'}`);
+                alert('저장되었습니다.\n실행앱에 반영하려면 수동 업데이트 절차로 수동업데이트_실행기.bat를 실행해 주세요.');
                 editorContainer.classList.add('hidden');
                 markdownContent.classList.remove('hidden');
                 editBtn.style.display = isLearningPreview ? 'none' : 'flex';

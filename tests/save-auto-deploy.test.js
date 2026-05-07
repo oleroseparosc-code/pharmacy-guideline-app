@@ -149,12 +149,12 @@ elements.editBtn.click();
 Promise.resolve(elements.saveBtn.click()).then(() => {
   assert.deepStrictEqual(
     fetchCalls,
-    ['/api/save', '/api/deploy'],
-    '저장 성공 후 웹 반영 API가 자동으로 호출되어야 합니다.'
+    ['/api/save'],
+    '문서 편집기 저장은 로컬 data.js/custom_edits.json 저장만 수행해야 합니다.'
   );
   assert(
-    alerts.some(message => message.includes('웹')),
-    '자동 웹 반영 결과를 사용자에게 알려야 합니다.'
+    alerts.some(message => message.includes('수동 업데이트')),
+    '실행앱 반영은 수동 업데이트 절차가 필요하다고 알려야 합니다.'
   );
 }).catch(error => {
   console.error(error);

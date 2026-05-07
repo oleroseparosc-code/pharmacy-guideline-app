@@ -1,27 +1,23 @@
 @echo off
 chcp 65001 > nul
-echo ========================================================
-echo 약제팀 규정 지침 앱 - 자동 업데이트 실행기
-echo ========================================================
-echo [1/4] PDF 변환 중... (1-3분 소요)
-cd /d "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
-python -u "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\extract_with_images.py"
+title Pharmacy Guideline Data Auto Update
 
-echo.
-echo [2/4] 이미지 및 텍스트 정제 중...
-python -u "c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱\fix_images2.py"
+cd /d "%~dp0"
 
-echo.
-echo [3/4] Git 업로드 준비...
-"C:\Program Files\Git\cmd\git.exe" add .
-"C:\Program Files\Git\cmd\git.exe" commit -m "Auto update via Magic Button"
-
-echo.
-echo [4/4] GitHub에 업로드 중...
-"C:\Program Files\Git\cmd\git.exe" push origin main
-
-echo.
 echo ========================================================
-echo 완료되었습니다! 인터넷 창을 확인하세요.
+echo Pharmacy guideline data auto update watcher
 echo ========================================================
-pause >nul
+echo Watching PDF/data folder for changes.
+echo Source folder:
+echo C:\Users\duih\Desktop\코딩\규정 지침 앱
+echo.
+echo When PDF data changes, this watcher regenerates data.js,
+echo builds dist, commits, and pushes origin main.
+echo.
+echo Keep this window open while you want automatic updates.
+echo Close this window to stop watching.
+echo ========================================================
+echo.
+
+python auto_sync.py
+pause

@@ -10,6 +10,23 @@ WATCH_DIR = r"c:\Users\duih\Desktop\코딩\규정 지침 앱"
 WORK_DIR = r"c:\Users\duih\Desktop\코딩"
 APP_DIR = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
 GIT_EXE = r"C:\Program Files\Git\cmd\git.exe"
+TRACKED_OUTPUTS = [
+    "data.js",
+    "custom_edits.json",
+    "dist/index.html",
+    "dist/app.js",
+    "dist/data.js",
+    "dist/style.css",
+    "dist/images",
+    "images",
+]
+
+def log(message):
+    with open(os.path.join(WORK_DIR, "auto_sync.log"), "a", encoding="utf-8") as f:
+        f.write(f"{time.ctime()}: {message}\n")
+
+def run_step(args, cwd=APP_DIR):
+    subprocess.run(args, cwd=cwd, check=True)
 
 class WatcherHandler(FileSystemEventHandler):
     def __init__(self):
@@ -35,29 +52,41 @@ class WatcherHandler(FileSystemEventHandler):
             creationflags = subprocess.CREATE_NO_WINDOW
 
         try:
+            log("PDF/data auto update started")
+
             # 1. extract_with_images.py 실행
-            subprocess.run(["python", os.path.join(APP_DIR, "extract_with_images.py")], 
-                           cwd=APP_DIR, creationflags=creationflags)
+            run_step(["python", os.path.join(APP_DIR, "extract_with_images.py")])
             
             # 2. fix_images2.py 실행
-            subprocess.run(["python", os.path.join(APP_DIR, "fix_images2.py")], 
-                           cwd=APP_DIR, creationflags=creationflags)
+            run_step(["python", os.path.join(APP_DIR, "fix_images2.py")])
+
+            # 3. dist 생성
+            run_step(["python", os.path.join(APP_DIR, "build_dist.py")])
             
-            # 3. git add .
-            subprocess.run([GIT_EXE, "add", "."], 
-                           cwd=APP_DIR, creationflags=creationflags)
+            # 4. 필요한 산출물만 Git에 추가
+            run_step([GIT_EXE, "add", *TRACKED_OUTPUTS])
             
-            # 4. git commit
-            subprocess.run([GIT_EXE, "commit", "-m", "Auto sync from background watcher"], 
-                           cwd=APP_DIR, creationflags=creationflags)
+            status = subprocess.run(
+                [GIT_EXE, "status", "--porcelain"],
+                cwd=APP_DIR,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            if not status.stdout.strip():
+                log("No changes to commit")
+                return
+
+            # 5. git commit
+            run_step([GIT_EXE, "commit", "-m", "데이터 자동 업데이트"])
             
-            # 5. git push
-            subprocess.run([GIT_EXE, "push", "origin", "main"], 
-                           cwd=APP_DIR, creationflags=creationflags)
+            # 6. git push
+            run_step([GIT_EXE, "push", "origin", "main"])
+            log("PDF/data auto update pushed to origin main")
             
         except Exception as e:
             # 백그라운드이므로 에러 로그를 남기거나 무시
-            with open(os.path.join(WORK_DIR, "auto_sync_error.log"), "a") as f:
+            with open(os.path.join(WORK_DIR, "auto_sync_error.log"), "a", encoding="utf-8") as f:
                 f.write(f"{time.ctime()}: {str(e)}\n")
 
 if __name__ == "__main__":

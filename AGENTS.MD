@@ -57,7 +57,9 @@ This project is the hospital pharmacy guideline learning app.
 - The git repository is inside `병원_약제팀_학습앱`.
 - Main branch: `main`
 - Remote: `https://github.com/oleroseparosc-code/pharmacy-guideline-app.git`
-- The in-app deploy button calls `/api/deploy`, which builds `dist`, commits if there are changes, then pushes only to the Cloudflare production branch `origin main`.
+- Editor saves call `/api/save` only and update local `data.js` plus `custom_edits.json`; they do not deploy automatically.
+- Manual editor changes are published by running `수동업데이트_실행기.bat`, which builds `dist`, commits, and pushes `origin main`.
+- PDF/data additions are published by the automatic update workflow, which regenerates `data.js`, builds `dist`, commits, and pushes `origin main`.
 - Cloudflare Workers is the real public execution app: `https://pharmacy-guideline-app.olerose-parosc.workers.dev/`.
 - GitHub Pages is not the production verification target for this app.
 - Cloudflare production Build command must be `python build_dist.py`.
