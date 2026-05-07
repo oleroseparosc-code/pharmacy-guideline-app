@@ -13,7 +13,9 @@ import time
 
 PORT = 8000
 DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
+PUBLIC_BASE_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev"
 PUBLIC_DATA_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/data.js"
+PUBLIC_APP_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/app.js"
 DIST_FILES = ["index.html", "app.js", "data.js", "style.css"]
 
 def build_dist():
@@ -35,30 +37,77 @@ def read_local_data_js():
     with open(data_js_path, 'r', encoding='utf-8') as f:
         return f.read()
 
+def read_local_app_js():
+    app_js_path = os.path.join(DIRECTORY, 'app.js')
+    with open(app_js_path, 'r', encoding='utf-8') as f:
+        return f.read()
+
 def normalize_data_js(content):
     return content.replace('\r\n', '\n').strip()
 
-def wait_for_public_data_sync(timeout_seconds=180, interval_seconds=5):
-    local_data = normalize_data_js(read_local_data_js())
+def normalize_public_file(content):
+    return content.replace('\r\n', '\n').strip()
+
+def read_public_url(url):
+    request = urllib.request.Request(
+        f"{url}?v={int(time.time() * 1000)}",
+        headers={'Cache-Control': 'no-cache'}
+    )
+    with urllib.request.urlopen(request, timeout=15) as response:
+        return response.read().decode('utf-8')
+
+def wait_for_public_file_sync(url, local_content, label, timeout_seconds=180, interval_seconds=5, required_marker=None):
+    local_file = normalize_public_file(local_content)
     deadline = time.time() + timeout_seconds
     last_error = None
 
     while time.time() < deadline:
         try:
-            url = f"{PUBLIC_DATA_URL}?v={int(time.time() * 1000)}"
-            request = urllib.request.Request(url, headers={'Cache-Control': 'no-cache'})
-            with urllib.request.urlopen(request, timeout=15) as response:
-                remote_data = normalize_data_js(response.read().decode('utf-8'))
+            remote_file = normalize_public_file(read_public_url(url))
 
-            if remote_data == local_data:
+            if remote_file == local_file and (not required_marker or required_marker in remote_file):
                 return True, None
-            last_error = "공개 링크의 data.js가 아직 최신 파일로 바뀌지 않았습니다."
+            last_error = f"공개 링크의 {label}가 아직 최신 파일로 바뀌지 않았습니다."
         except Exception as e:
             last_error = str(e)
 
         time.sleep(interval_seconds)
 
     return False, last_error
+
+def wait_for_public_data_sync(timeout_seconds=180, interval_seconds=5):
+    return wait_for_public_file_sync(
+        PUBLIC_DATA_URL,
+        read_local_data_js(),
+        "data.js",
+        timeout_seconds=timeout_seconds,
+        interval_seconds=interval_seconds
+    )
+
+def wait_for_public_app_sync(timeout_seconds=180, interval_seconds=5):
+    return wait_for_public_file_sync(
+        PUBLIC_APP_URL,
+        read_local_app_js(),
+        "app.js",
+        timeout_seconds=timeout_seconds,
+        interval_seconds=interval_seconds,
+        required_marker="normalizeFontMarkup"
+    )
+
+def wait_for_public_sync(timeout_seconds=180):
+    data_synced, data_error = wait_for_public_data_sync(timeout_seconds=timeout_seconds)
+    if not data_synced:
+        return False, data_error
+
+    app_synced, app_error = wait_for_public_app_sync(timeout_seconds=timeout_seconds)
+    if not app_synced:
+        return False, (
+            f"{app_error} Cloudflare Build settings의 production Deploy command가 "
+            "`npx wrangler deploy`인지 확인하세요. `npx wrangler versions upload`는 "
+            "버전만 업로드하고 실제 실행앱에는 반영하지 않습니다."
+        )
+
+    return True, None
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -190,7 +239,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     subprocess.run(['git', 'commit', '-m', '웹 에디터에서 내용 수정 및 업데이트'], cwd=DIRECTORY, check=True)
                     subprocess.run(['git', 'push', 'origin', 'main'], cwd=DIRECTORY, check=True)
                     subprocess.run(['git', 'push', 'origin', 'HEAD:cloudflare/workers-autoconfig'], cwd=DIRECTORY, check=True)
-                    synced, sync_error = wait_for_public_data_sync()
+                    synced, sync_error = wait_for_public_sync()
                     if synced:
                         message = "변경사항이 실제 Workers 링크(웹)에 반영된 것을 확인했습니다. 새로고침하면 최신 내용이 보입니다."
                     else:
@@ -203,7 +252,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                         }, ensure_ascii=False).encode('utf-8'))
                         return
                 else:
-                    synced, sync_error = wait_for_public_data_sync(timeout_seconds=60)
+                    synced, sync_error = wait_for_public_sync(timeout_seconds=60)
                     if synced:
                         message = "수정된 내용은 이미 실제 링크(웹)에 반영되어 있습니다."
                     else:

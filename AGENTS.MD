@@ -60,6 +60,8 @@ This project is the hospital pharmacy guideline learning app.
 - The in-app deploy button calls `/api/deploy`, which builds `dist`, commits if there are changes, then pushes to `origin main` and `origin HEAD:cloudflare/workers-autoconfig`.
 - Cloudflare Workers is the real public execution app: `https://pharmacy-guideline-app.olerose-parosc.workers.dev/`.
 - GitHub Pages is not the production verification target for this app.
+- Cloudflare production Build command must be `python build_dist.py`.
+- Cloudflare production Deploy command must be `npx wrangler deploy`; do not use `npx wrangler versions upload` for production because it uploads a version without promoting it to the live Workers URL.
 - The public website link must never change during deployment. Do not rename the repository, change the GitHub Pages source, alter the deploy branch, move the app to a different hosting target, or introduce any deployment flow that changes the existing URL unless the user explicitly asks for a URL migration.
 - Cloudflare must deploy from `dist`; do not change `wrangler.jsonc` assets directory away from `./dist` unless replacing the deploy architecture deliberately.
 
