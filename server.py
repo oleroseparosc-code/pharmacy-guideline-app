@@ -16,6 +16,7 @@ DIRECTORY = r"c:\Users\duih\Desktop\코딩\병원_약제팀_학습앱"
 PUBLIC_BASE_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev"
 PUBLIC_DATA_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/data.js"
 PUBLIC_APP_URL = "https://pharmacy-guideline-app.olerose-parosc.workers.dev/app.js"
+PRODUCTION_BRANCH = "main"
 DIST_FILES = ["index.html", "app.js", "data.js", "style.css"]
 
 def build_dist():
@@ -237,8 +238,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 
                 if status_result.stdout.strip():
                     subprocess.run(['git', 'commit', '-m', '웹 에디터에서 내용 수정 및 업데이트'], cwd=DIRECTORY, check=True)
-                    subprocess.run(['git', 'push', 'origin', 'main'], cwd=DIRECTORY, check=True)
-                    subprocess.run(['git', 'push', 'origin', 'HEAD:cloudflare/workers-autoconfig'], cwd=DIRECTORY, check=True)
+                    subprocess.run(['git', 'push', 'origin', PRODUCTION_BRANCH], cwd=DIRECTORY, check=True)
                     synced, sync_error = wait_for_public_sync()
                     if synced:
                         message = "변경사항이 실제 Workers 링크(웹)에 반영된 것을 확인했습니다. 새로고침하면 최신 내용이 보입니다."
