@@ -91,11 +91,14 @@ const context = {
         '[font size="24"]큰 글자[/font]',
         '\\[font size=\\"18\\"\\]이스케이프 글자\\[/font\\]',
         '$$widget0 [font size="20"]위젯 글자[/font]$$',
+        '![image](images/edit_test.png)',
+        '\\!\\[image\\]\\(images/edit_escaped.png\\)',
+        '![image]images/edit_missing_parens.png',
       ].join('\n'),
     },
   ],
   marked: {
-    parse: markdown => `<p>${markdown}</p>`,
+    parse: markdown => markdown,
   },
   toastui: {
     Editor: function Editor() {},
@@ -120,4 +123,16 @@ assert(
 assert(
   elements.markdownContent.innerHTML.includes('<span style="font-size: 20px;">위젯 글자</span>'),
   'Toast UI 위젯 저장 표기도 실제 span 스타일로 렌더링해야 합니다.'
+);
+assert(
+  elements.markdownContent.innerHTML.includes('<img src="images/edit_test.png" alt="image">'),
+  '정상 이미지 마크다운은 실제 이미지 태그로 렌더링해야 합니다.'
+);
+assert(
+  elements.markdownContent.innerHTML.includes('<img src="images/edit_escaped.png" alt="image">'),
+  '이스케이프된 이미지 마크다운도 실제 이미지 태그로 렌더링해야 합니다.'
+);
+assert(
+  elements.markdownContent.innerHTML.includes('<img src="images/edit_missing_parens.png" alt="image">'),
+  '괄호가 빠진 이미지 표기도 실제 이미지 태그로 복구해야 합니다.'
 );

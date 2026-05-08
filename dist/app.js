@@ -422,8 +422,25 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/\\\[\/font\\\]/g, '[/font]');
     }
 
+    function normalizeImageMarkup(markdown) {
+        return String(markdown || '')
+            .replace(/\\!\\\[([^\]]*)\\\]\\\((images\/[^)\s]+)\\\)/g, '![$1]($2)')
+            .replace(/!\[([^\]]*)\](images\/[^\s)]+)/g, '![$1]($2)');
+    }
+
+    function renderImageMarkup(markdown) {
+        return normalizeImageMarkup(markdown).replace(
+            /!\[([^\]]*)\]\((images\/[^)\s]+)\)/g,
+            (_, alt, src) => `<img src="${src}" alt="${alt || 'image'}">`
+        );
+    }
+
+    function normalizeEditorMarkup(markdown) {
+        return normalizeImageMarkup(normalizeFontMarkup(markdown));
+    }
+
     function renderFontSizeMarkup(markdown) {
-        return normalizeFontMarkup(markdown)
+        return renderImageMarkup(normalizeFontMarkup(markdown))
             .replace(/\\?<span style="font-size:\s*(12|14|16|18|20|24|28|32)px;">([\s\S]*?)\\?<\/span\\?>/g, '<span style="font-size: $1px;">$2</span>')
             .replace(/\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g, '<span style="font-size: $1px;">$2</span>');
     }
@@ -443,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveBtn.addEventListener('click', async () => {
-        const newContent = normalizeFontMarkup(editor.getMarkdown());
+        const newContent = normalizeEditorMarkup(editor.getMarkdown());
         const doc = documentsData.find(d => d.id === activeDocId);
         doc.content = newContent;
         

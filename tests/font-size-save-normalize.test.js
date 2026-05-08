@@ -121,7 +121,12 @@ const context = {
   toastui: {
     Editor: function Editor() {
       return {
-        getMarkdown: () => '$$widget0 [font size="24"]큰 글자[/font]$$\n\\[font size=\\"18\\"\\]작은 글자\\[/font\\]',
+        getMarkdown: () => [
+          '$$widget0 [font size="24"]큰 글자[/font]$$',
+          '\\[font size=\\"18\\"\\]작은 글자\\[/font\\]',
+          '\\!\\[image\\]\\(images/edit_escaped.png\\)',
+          '![image]images/edit_missing_parens.png',
+        ].join('\n'),
         setMarkdown: () => {},
       };
     },
@@ -151,8 +156,13 @@ Promise.resolve(elements.saveBtn.click()).then(() => {
   assert.strictEqual(saveBodies.length, 1, '저장 API가 한 번 호출되어야 합니다.');
   assert.strictEqual(
     saveBodies[0].content,
-    '[font size="24"]큰 글자[/font]\n[font size="18"]작은 글자[/font]',
-    '저장 전에 Toast UI가 변형한 글자 크기 표기를 정상 shortcode로 정규화해야 합니다.'
+    [
+      '[font size="24"]큰 글자[/font]',
+      '[font size="18"]작은 글자[/font]',
+      '![image](images/edit_escaped.png)',
+      '![image](images/edit_missing_parens.png)',
+    ].join('\n'),
+    '저장 전에 Toast UI가 변형한 글자 크기/이미지 표기를 정상 마크다운으로 정규화해야 합니다.'
   );
 }).catch(error => {
   console.error(error);
