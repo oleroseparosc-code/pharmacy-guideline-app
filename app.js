@@ -169,18 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const matchesFilter = currentFilter === '전체' || getDocCategory(doc) === normalizeCategory(currentFilter);
                 if (!matchesFilter) return;
 
+                const cleanContent = normalizeEditorMarkup(doc.content);
                 const titleMatch = doc.title.toLowerCase().includes(searchQuery);
-                const contentIndex = doc.content.toLowerCase().indexOf(searchQuery);
+                const contentIndex = cleanContent.toLowerCase().indexOf(searchQuery);
                 
                 if (titleMatch || contentIndex !== -1) {
                     let snippet = null;
                     if (contentIndex !== -1) {
                         const start = Math.max(0, contentIndex - 40);
-                        const end = Math.min(doc.content.length, contentIndex + 80);
-                        snippet = doc.content.substring(start, end).replace(/\n/g, ' ');
+                        const end = Math.min(cleanContent.length, contentIndex + 80);
+                        snippet = cleanContent.substring(start, end).replace(/\n/g, ' ');
                         
                         if (start > 0) snippet = '...' + snippet;
-                        if (end < doc.content.length) snippet = snippet + '...';
+                        if (end < cleanContent.length) snippet = snippet + '...';
                         
                         const regex = new RegExp(`(${escapeRegExp(searchQuery)})`, 'gi');
                         snippet = snippet.replace(regex, '<mark>$1</mark>');
@@ -353,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     height: '600px',
                     initialEditType: 'wysiwyg',
                     previewStyle: 'vertical',
-                    initialValue: normalizeFontMarkup(doc.content),
+                    initialValue: normalizeEditorMarkup(doc.content),
                     plugins: [toastui.Editor.plugin.colorSyntax],
                     widgetRules: [
                         {
@@ -387,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else {
-                editor.setMarkdown(normalizeFontMarkup(doc.content));
+                editor.setMarkdown(normalizeEditorMarkup(doc.content));
             }
         });
 
@@ -435,12 +436,27 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
+    function normalizeImportedDocumentMarkup(markdown) {
+        let normalized = String(markdown || '')
+            .replace(/^\s*동국대학교\s*일산(?:불교)?병원\s*약제팀\s*$/gm, '')
+            .replace(/^##\s+((?:\d{1,2}\)|[가-힣]\.|[①②③④⑤⑥⑦⑧⑨⑩]|▶|\*\s*주의|최종\s*검토일|최근\s*검토일|최신\s*검토일)[^\n]*)$/gm, '$1');
+
+        for (let i = 0; i < 3; i += 1) {
+            normalized = normalized.replace(/([^\n\-*])\s+((?:\d{1,2}\)|[①②③④⑤⑥⑦⑧⑨⑩]|▶)\s+)/g, '$1\n\n$2');
+        }
+
+        return normalized
+            .replace(/[ \t]+\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
+
     function normalizeEditorMarkup(markdown) {
-        return normalizeImageMarkup(normalizeFontMarkup(markdown));
+        return normalizeImportedDocumentMarkup(normalizeImageMarkup(normalizeFontMarkup(markdown)));
     }
 
     function renderFontSizeMarkup(markdown) {
-        return renderImageMarkup(normalizeFontMarkup(markdown))
+        return renderImageMarkup(normalizeEditorMarkup(markdown))
             .replace(/\\?<span style="font-size:\s*(12|14|16|18|20|24|28|32)px;">([\s\S]*?)\\?<\/span\\?>/g, '<span style="font-size: $1px;">$2</span>')
             .replace(/\[font size="(12|14|16|18|20|24|28|32)"\]([\s\S]*?)\[\/font\]/g, '<span style="font-size: $1px;">$2</span>');
     }

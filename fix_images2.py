@@ -60,6 +60,21 @@ for doc in docs:
     # Text Cleanup (Remove headers, specific strings, etc)
     content = doc['content']
     
+    # Remove PDF page headers that were imported as body text.
+    content = re.sub(r'^\s*동국대학교\s*일산(?:불교)?병원\s*약제팀\s*$', '', content, flags=re.MULTILINE)
+    
+    # Demote list-like lines that the converter accidentally marked as headings.
+    content = re.sub(
+        r'^##\s+((?:\d{1,2}\)|[가-힣]\.|[①②③④⑤⑥⑦⑧⑨⑩]|▶|\*\s*주의|최종\s*검토일|최근\s*검토일|최신\s*검토일)[^\n]*)$',
+        r'\1',
+        content,
+        flags=re.MULTILINE
+    )
+    for _ in range(3):
+        content = re.sub(r'([^\n\-*])\s+((?:\d{1,2}\)|[①②③④⑤⑥⑦⑧⑨⑩]|▶)\s+)', r'\1\n\n\2', content)
+    content = re.sub(r'[ \t]+\n', '\n', content)
+    content = re.sub(r'\n{3,}', '\n\n', content).strip()
+    
     # 1. Remove '동국대학교일산병원 약제팀' and variants
     content = content.replace('동국대학교일산병원 약제팀', '')
     content = content.replace('동국대학교 일산병원 약제팀', '')
